@@ -1,10 +1,7 @@
-use std::io::{self, Read};
-use crossterm::event;
 use crossterm::event::{read, Event::Key, KeyCode::Char};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
-pub struct Editor {
-
-}
+use std::io::{self, Read};
+pub struct Editor {}
 impl Editor {
     pub fn default() -> Self {
         Editor {}
@@ -32,18 +29,18 @@ impl Editor {
         loop {
             match read() {
                 Ok(Key(event)) => {
-                    println!("{:?} \r",event);
-                    match (event.code) {
+                    println!("{:?} \r", event);
+                    match event.code {
                         Char(c) => {
                             if c == 'q' {
                                 break;
                             }
-                        },
+                        }
                         _ => (),
                     }
-                },
+                }
                 Err(err) => println!("Error: {}", err),
-                _ => ()
+                _ => (),
             }
         }
         disable_raw_mode().unwrap();
