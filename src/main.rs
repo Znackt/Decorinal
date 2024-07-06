@@ -1,6 +1,6 @@
 mod editor;
 use editor::Editor;
-fn main(){
+fn main() {
     let editor = Editor::default();
     editor.run();
 }
