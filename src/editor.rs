@@ -6,7 +6,7 @@ pub struct Editor {
 
 impl Editor {
     pub fn default() -> Self {
-        Editor {should_quit: false}
+        Editor { should_quit: false }
     }
     pub fn run(&mut self) {
         if let Err(err) = self.repl() {
@@ -19,10 +19,15 @@ impl Editor {
         enable_raw_mode()?;
         loop {
             if let Key(KeyEvent {
-                code, modifiers, kind, state 
+                code,
+                modifiers,
+                kind,
+                state,
             }) = read()?
             {
-                println!("Code: {code:?} Modifiers: {modifiers:?} Kind: {kind:?} State: {state:?} \r");
+                println!(
+                    "Code: {code:?} Modifiers: {modifiers:?} Kind: {kind:?} State: {state:?} \r"
+                );
                 match code {
                     Char('q') if modifiers == KeyModifiers::CONTROL => {
                         self.should_quit = true;
@@ -31,7 +36,7 @@ impl Editor {
                 }
                 if self.should_quit {
                     break;
-                }    
+                }
             }
         }
         disable_raw_mode()?;
