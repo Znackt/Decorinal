@@ -1,45 +1,63 @@
-use crossterm::event::{read, Event::Key, KeyCode::Char, KeyEvent, KeyModifiers};
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+use crossterm::event::{read, Event, Event::Key, KeyCode::Char, KeyEvent, KeyModifiers};
+mod terminal;
+use terminal::Terminal;
 pub struct Editor {
     should_quit: bool,
 }
 
 impl Editor {
-    pub fn default() -> Self {
-        Editor { should_quit: false }
+    pub const fn default() -> Self {
+        Self { should_quit: false }
     }
     pub fn run(&mut self) {
-        if let Err(err) = self.repl() {
-            panic!("{err:#?}");
-        }
-        print!("Goodbye.\r\n");
+        Terminal::initialize().unwrap();
+        let result = self.repl();
+        Terminal::terminate().unwrap();
+        result.unwrap();
     }
 
     fn repl(&mut self) -> Result<(), std::io::Error> {
-        enable_raw_mode()?;
         loop {
-            if let Key(KeyEvent {
-                code,
-                modifiers,
-                kind,
-                state,
-            }) = read()?
-            {
-                println!(
-                    "Code: {code:?} Modifiers: {modifiers:?} Kind: {kind:?} State: {state:?} \r"
-                );
-                match code {
-                    Char('q') if modifiers == KeyModifiers::CONTROL => {
-                        self.should_quit = true;
-                    }
-                    _ => (),
+            self.refresh_screen()?;
+            if self.should_quit {
+                break;
+            }
+            let event = read()?;
+            self.evaluate_event(&event);
+        }
+        Ok(())
+    }
+    fn evaluate_event(&mut self, event: &Event) {
+        if let Key(KeyEvent {
+            code, modifiers, ..
+        }) = event
+        {
+            match code {
+                Char('q') if *modifiers == KeyModifiers::CONTROL => {
+                    self.should_quit = true;
                 }
-                if self.should_quit {
-                    break;
-                }
+                _ => (),
             }
         }
-        disable_raw_mode()?;
+    }
+    fn refresh_screen(&self) -> Result<(), std::io::Error> {
+        if self.should_quit {
+            Terminal::clear_screen()?;
+            print!("Goodbye.\r\n");
+        } else {
+            Self::draw_rows()?;
+            Terminal::move_cursor_to(0, 0)?;
+        }
+        Ok(())
+    }
+    fn draw_rows() -> Result<(), std::io::Error> {
+        let height = Terminal::size()?.1;
+        for current_row in 0..height {
+            print!("~");
+            if current_row + 1 < height {
+                print!("\r\n");
+            }
+        }
         Ok(())
     }
 }
